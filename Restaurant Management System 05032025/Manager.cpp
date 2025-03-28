@@ -34,6 +34,7 @@ void Restaurant::addMenuItem() {
 void Restaurant::removeMenuItem() {
     string type, name;
     cout << "Enter menu type (appetizer, main, dessert): ";
+    cout << "Enter menu type (appetizer, main, dessert): ";
     cin >> type;
     cout << "Enter item name to remove: ";
     cin >> name;
