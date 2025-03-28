@@ -127,7 +127,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Restaurant Management System 05032025.cpp" />
+    <ClCompile Include="Manager.cpp" />
+    <ClCompile Include="MenuFunctions.cpp" />
+    <ClCompile Include="MenuItem.cpp" />
+    <ClCompile Include="Order.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Restaurant.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="order_details.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MenuFunctions.h" />
+    <ClInclude Include="MenuItem.h" />
+    <ClInclude Include="Order.h" />
+    <ClInclude Include="Restaurant.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
