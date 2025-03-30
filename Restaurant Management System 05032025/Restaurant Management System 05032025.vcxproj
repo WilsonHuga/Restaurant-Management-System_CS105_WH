@@ -127,7 +127,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Manager.cpp" />
     <ClCompile Include="MenuFunctions.cpp" />
     <ClCompile Include="MenuItem.cpp" />
     <ClCompile Include="Order.cpp" />

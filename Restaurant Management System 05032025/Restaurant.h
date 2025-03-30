@@ -3,8 +3,8 @@
 
 #include <vector>
 #include <string>
-#include "MenuItem.h"   // Ensure this header exists
-#include "Order.h"      // Ensure this header exists
+#include "MenuItem.h"
+#include "Order.h"
 
 class Restaurant {
 public:
@@ -12,12 +12,6 @@ public:
     std::vector<MainCourse> mainCourses;
     std::vector<Dessert> desserts;
     std::vector<Order> orders;
-
-    Restaurant(int tableCount);
-
-    /*Restaurant();
-    void loadOrdersFromFile(const std::string& filename);
-    void saveOrdersToFile(const std::string& filename);*/
 
     int tableCount;
     std::vector<bool> availableTables;
@@ -34,12 +28,11 @@ public:
     void markInPreparation(int tableNum);
     void showAvailableTables();
 
-    // Manager Functions
+    // Manager Functions (Declarations only)
     void addMenuItem();
     void removeMenuItem();
     void addSpecialMenu();
     void viewCustomerTablesAndBills();
-
 };
 
 #endif

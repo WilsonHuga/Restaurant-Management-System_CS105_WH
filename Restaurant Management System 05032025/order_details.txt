@@ -1,0 +1,38 @@
+Order for Table 1 (Pending):
+Spring Rolls x2 - $11
+Total: $11
+
+Order for Table 1 (Pending):
+Spring Rolls x2 - $11
+Steak x3 - $60
+Total: $71
+
+Order for Table 1 (Paid):
+Spring Rolls x2 - $11
+Steak x3 - $60
+Total: $71
+
+Order for Table 1 (Completed):
+Spring Rolls x2 - $11
+Steak x3 - $60
+Total: $71
+
+Order for Table 1 (Pending):
+Spring Rolls x2 - $11
+Total: $11
+
+Order for Table 1 (Pending):
+Spring Rolls x2 - $11
+Tiramisu x2 - $15
+Total: $26
+
+Order for Table 1 (Paid):
+Spring Rolls x2 - $11
+Tiramisu x2 - $15
+Total: $26
+
+Order for Table 1 (Completed):
+Spring Rolls x2 - $11
+Tiramisu x2 - $15
+Total: $26
+
