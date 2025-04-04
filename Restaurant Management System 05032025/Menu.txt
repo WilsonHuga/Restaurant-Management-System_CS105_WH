@@ -1,0 +1,8 @@
+Appetizer|Spring Rolls|5.5
+Appetizer|Calamari|7.5
+MainCourse|Steak|20
+MainCourse|Salmon|18
+MainCourse|Piadina Ricotta|15
+Dessert|Chocolate Creme|6.5
+Dessert|Tiramisu|7.5
+Dessert|Cheesecake|6

@@ -134,6 +134,7 @@
     <ClCompile Include="Restaurant.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="Menu.txt" />
     <Text Include="order_details.txt" />
   </ItemGroup>
   <ItemGroup>

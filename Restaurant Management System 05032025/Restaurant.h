@@ -1,10 +1,10 @@
 #ifndef RESTAURANT_H
 #define RESTAURANT_H
 
-#include <vector>
-#include <string>
 #include "MenuItem.h"
 #include "Order.h"
+#include <vector>
+#include <string>
 
 class Restaurant {
 public:
@@ -12,9 +12,9 @@ public:
     std::vector<MainCourse> mainCourses;
     std::vector<Dessert> desserts;
     std::vector<Order> orders;
+    std::vector<bool> availableTables;
 
     int tableCount;
-    std::vector<bool> availableTables;
 
     Restaurant(int tableCount);
     void addAppetizer(Appetizer appetizer);
@@ -27,12 +27,25 @@ public:
     void completeOrder();
     void markInPreparation(int tableNum);
     void showAvailableTables();
-
-    // Manager Functions (Declarations only)
     void addMenuItem();
     void removeMenuItem();
     void addSpecialMenu();
     void viewCustomerTablesAndBills();
+    void loadSavedOrders();
+    void updateTableAvailability();
+
+    // New method to get the active order for a table
+    bool getActiveOrderForTable(int tableNum, Order& result);
+
+
+    // Manager usage 
+    void viewAllBills();
+    void generateSalesReport();
+    //double calculateTotalRevenue();
+
+
+    void loadMenuFromFile();
+    void saveMenuToFile();
 };
 
 #endif

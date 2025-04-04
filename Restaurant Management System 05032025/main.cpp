@@ -8,7 +8,25 @@ int main() {
     int userChoice;
     Restaurant restaurant(20);
 
-    Appetizer appetizer1("Spring Rolls", 5.5);
+    restaurant.loadMenuFromFile();
+
+    if (restaurant.appetizers.empty() && restaurant.mainCourses.empty() && restaurant.desserts.empty()) {
+        cout << "Creating default menu...\n";
+        // Add default menu items
+        restaurant.addAppetizer(Appetizer("Spring Rolls", 5.5));
+        restaurant.addAppetizer(Appetizer("Calamari", 7.5));
+        restaurant.addMainCourse(MainCourse("Steak", 20.0));
+        restaurant.addMainCourse(MainCourse("Salmon", 18.0));
+        restaurant.addMainCourse(MainCourse("Piadina Ricotta", 15.0));
+        restaurant.addDessert(Dessert("Chocolate Creme", 6.5));
+        restaurant.addDessert(Dessert("Tiramisu", 7.5));
+        restaurant.addDessert(Dessert("Cheesecake", 6.0));
+
+        // Save the default menu to file
+        restaurant.saveMenuToFile();
+    }
+
+    /*Appetizer appetizer1("Spring Rolls", 5.5);
     Appetizer appetizer2("Calamari", 7.5);
     MainCourse mainCourse1("Steak", 20.0);
     MainCourse mainCourse2("Salmon", 18.0);
@@ -24,11 +42,19 @@ int main() {
     restaurant.addMainCourse(mainCourse3);
     restaurant.addDessert(dessert1);
     restaurant.addDessert(dessert2);
-    restaurant.addDessert(dessert3);
+    restaurant.addDessert(dessert3);*/
+
+    restaurant.loadSavedOrders();
 
     while (true) {
+        cout << "\n===================================\n";
         cout << "Welcome to the Restaurant System!\n";
-        cout << "Are you a (1) Kitchen Attendant, (2) Customer, or (3) Manager? (Enter 4 to Exit): ";
+        cout << "===================================\n";
+        cout << "1. Kitchen Attendant\n";
+        cout << "2. Customer\n";
+        cout << "3. Manager\n";
+        cout << "4. Exit\n";
+        cout << "Enter your choice: ";
         cin >> userChoice;
 
         if (userChoice == 1) {

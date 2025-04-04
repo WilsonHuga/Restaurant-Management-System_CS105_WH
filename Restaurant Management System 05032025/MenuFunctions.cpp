@@ -10,7 +10,9 @@ void managerMenu(Restaurant& restaurant) {
         cout << "2. Remove Menu Item\n";
         cout << "3. Add Special Menu\n";
         cout << "4. View Customer Tables and Bills\n";
-        cout << "5. Return to Main Menu\n";
+        cout << "5. View All Bills\n";
+        cout << "6. Generate Sales Report\n";
+        cout << "7. Return to Main Menu\n";
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -28,6 +30,12 @@ void managerMenu(Restaurant& restaurant) {
             restaurant.viewCustomerTablesAndBills();
             break;
         case 5:
+            restaurant.viewAllBills();
+            break;
+        case 6:
+            restaurant.generateSalesReport();
+            break;
+        case 7:
             cout << "Returning to main menu.\n";
             return;
         default:
@@ -39,6 +47,7 @@ void managerMenu(Restaurant& restaurant) {
 void kitchenAttendantMenu(Restaurant& restaurant) {
     int choice;
     int tableNum;
+    bool found;
 
     while (true) {
         cout << "\n==== Kitchen Attendant Menu ====\n";
@@ -56,16 +65,35 @@ void kitchenAttendantMenu(Restaurant& restaurant) {
         case 2:
             cout << "Enter table number: ";
             cin >> tableNum;
-            restaurant.markInPreparation(tableNum);
+
+            // Find the order for this table
+            found = false;
+            for (auto& order : restaurant.orders) {
+                if (order.tableNumber == tableNum) {
+                    found = true;
+                    order.markInPreparation();
+                    break;
+                }
+            }
+            if (!found) {
+                cout << "No order found for Table " << tableNum << ".\n";
+            }
             break;
         case 3:
             cout << "Enter table number to mark as completed: ";
             cin >> tableNum;
+
+            // Find the order for this table
+            found = false;
             for (auto& order : restaurant.orders) {
                 if (order.tableNumber == tableNum) {
+                    found = true;
                     order.markAsCompleted();
                     break;
                 }
+            }
+            if (!found) {
+                cout << "No order found for Table " << tableNum << ".\n";
             }
             break;
         case 4:
@@ -81,16 +109,33 @@ void customerMenu(Restaurant& restaurant) {
     int choice;
     int tableNum;
 
-    // Show available tables
-    restaurant.showAvailableTables();
+    // Update table availability based on order status
+    restaurant.updateTableAvailability();
 
-    cout << "Enter your table number: ";
-    cin >> tableNum;
+    bool validTableSelected = false;
+    while (!validTableSelected) {
+        // Show available tables
+        restaurant.showAvailableTables();
 
-    // Validate table number
-    if (tableNum < 1 || tableNum > restaurant.tableCount || !restaurant.availableTables[tableNum - 1]) {
-        cout << "Invalid or unavailable table number. Please try again.\n";
-        return;
+        cout << "Enter your table number: ";
+        cin >> tableNum;
+
+        // Validate table number
+        if (tableNum < 1 || tableNum > restaurant.tableCount) {
+            cout << "Invalid table number. Please try again.\n";
+            continue;
+        }
+
+        // Check if table is available
+        if (!restaurant.availableTables[tableNum - 1]) {
+            cout << "Table " << tableNum << " is currently active and unavailable.\n";
+            cout << "Please choose another table number from the available tables.\n";
+            cout << endl;
+            continue;
+        }
+
+        // If we reach here, the table selection is valid
+        validTableSelected = true;
     }
 
     while (true) {
@@ -108,15 +153,11 @@ void customerMenu(Restaurant& restaurant) {
             restaurant.displayMenu();
             break;
         case 2: {
-            // Create an order for this table if it doesn't exist yet
-            bool orderExists = false;
-            for (const auto& order : restaurant.orders) {
-                if (order.tableNumber == tableNum) {
-                    orderExists = true;
-                    break;
-                }
-            }
-            if (!orderExists) {
+            // Check if there's already an active order for this table
+            Order activeOrder(0);
+            bool hasActiveOrder = restaurant.getActiveOrderForTable(tableNum, activeOrder);
+
+            if (!hasActiveOrder) {
                 restaurant.createOrder(tableNum);
             }
 
@@ -124,8 +165,10 @@ void customerMenu(Restaurant& restaurant) {
             cout << "Select items to add to your order (enter 0 to finish):\n";
             restaurant.displayMenu();
 
-            size_t itemChoice; // Changed to size_t
+            size_t itemChoice;
             int quantity;
+            bool itemsAdded = false;
+
             while (true) {
                 cout << "Enter the item number (0 to finish): ";
                 cin >> itemChoice;
@@ -159,30 +202,54 @@ void customerMenu(Restaurant& restaurant) {
 
                 // Add the item to the order
                 restaurant.addOrderItem(tableNum, selectedItem, quantity);
+                itemsAdded = true;
             }
-            cout << "Order placed successfully.\n";
+
+            // Save the order to file
+            if (itemsAdded) {
+                // Find the active order and save it
+                Order updatedActiveOrder(0);
+                if (restaurant.getActiveOrderForTable(tableNum, updatedActiveOrder)) {
+                    for (auto& order : restaurant.orders) {
+                        if (order.tableNumber == tableNum &&
+                            order.status != "Completed" &&
+                            order.status != "Paid") {
+                            order.saveOrderToFile();
+                            cout << "Order saved successfully.\n";
+                            break;
+                        }
+                    }
+                }
+            }
+            else {
+                cout << "No items were added to the order.\n";
+            }
             break;
         }
         case 3: {
-            // Display this table's order
+            // Display this table's active order
             bool found = false;
             for (const auto& order : restaurant.orders) {
-                if (order.tableNumber == tableNum) {
+                if (order.tableNumber == tableNum &&
+                    order.status != "Completed" &&
+                    order.status != "Paid") {
                     order.displayOrder();
                     found = true;
                     break;
                 }
             }
             if (!found) {
-                cout << "No order found for Table " << tableNum << ".\n";
+                cout << "No active order found for Table " << tableNum << ".\n";
             }
             break;
         }
         case 4: {
             // Pay bill
             bool found = false;
-            for (auto& order : restaurant.orders) { // Removed const to allow modification
-                if (order.tableNumber == tableNum) {
+            for (auto& order : restaurant.orders) {
+                if (order.tableNumber == tableNum &&
+                    order.status != "Completed" &&
+                    order.status != "Paid") {
                     order.payOrder();
                     restaurant.availableTables[tableNum - 1] = true; // Free the table
                     found = true;
@@ -190,7 +257,7 @@ void customerMenu(Restaurant& restaurant) {
                 }
             }
             if (!found) {
-                cout << "No order found for Table " << tableNum << ".\n";
+                cout << "No active order found for Table " << tableNum << ".\n";
             }
             break;
         }

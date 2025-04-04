@@ -33,6 +33,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="order_details.txt" />
+    <Text Include="Menu.txt">
+      <Filter>Source Files</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MenuItem.h">

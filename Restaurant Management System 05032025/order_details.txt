@@ -1,38 +1,27 @@
-Order for Table 1 (Pending):
-Spring Rolls x2 - $11
-Total: $11
-
-Order for Table 1 (Pending):
-Spring Rolls x2 - $11
-Steak x3 - $60
-Total: $71
-
-Order for Table 1 (Paid):
-Spring Rolls x2 - $11
-Steak x3 - $60
-Total: $71
 
 Order for Table 1 (Completed):
 Spring Rolls x2 - $11
-Steak x3 - $60
-Total: $71
+Steak x2 - $40
+Total: $51
 
-Order for Table 1 (Pending):
-Spring Rolls x2 - $11
-Total: $11
-
-Order for Table 1 (Pending):
-Spring Rolls x2 - $11
-Tiramisu x2 - $15
-Total: $26
-
-Order for Table 1 (Paid):
-Spring Rolls x2 - $11
-Tiramisu x2 - $15
-Total: $26
+Order for Table 2 (Pending):
+Salmon x2 - $36
+Piadina Ricotta x3 - $45
+Total: $81
 
 Order for Table 1 (Completed):
-Spring Rolls x2 - $11
-Tiramisu x2 - $15
-Total: $26
+Spring Rolls x1 - $5.5
+Calamari x1 - $7.5
+Total: $13
+
+Order for Table 3 (Pending):
+Spring Rolls x1 - $5.5
+Salmon x3 - $54
+Calamari x2 - $15
+Total: $74.5
+
+Order for Table 1 (Pending):
+Spring Rolls x1 - $5.5
+Calamari x2 - $15
+Total: $20.5
 
