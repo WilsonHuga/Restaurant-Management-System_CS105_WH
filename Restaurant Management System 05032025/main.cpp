@@ -1,13 +1,15 @@
 #include <iostream>
 #include "Restaurant.h"
 #include "MenuFunctions.h"
+#include <fstream>
+#include <sstream>
+
 
 using namespace std;
 
 int main() {
     int userChoice;
     Restaurant restaurant(20);
-
     restaurant.loadMenuFromFile();
 
     if (restaurant.appetizers.empty() && restaurant.mainCourses.empty() && restaurant.desserts.empty()) {
@@ -25,26 +27,11 @@ int main() {
         // Save the default menu to file
         restaurant.saveMenuToFile();
     }
-
-    /*Appetizer appetizer1("Spring Rolls", 5.5);
-    Appetizer appetizer2("Calamari", 7.5);
-    MainCourse mainCourse1("Steak", 20.0);
-    MainCourse mainCourse2("Salmon", 18.0);
-    MainCourse mainCourse3("Piadina Ricotta", 15.0);
-    Dessert dessert1("Chocolate Creme", 6.5);
-    Dessert dessert2("Tiramisu", 7.5);
-    Dessert dessert3("Cheesecake", 6.0);
-
-    restaurant.addAppetizer(appetizer1);
-    restaurant.addAppetizer(appetizer2);
-    restaurant.addMainCourse(mainCourse1);
-    restaurant.addMainCourse(mainCourse2);
-    restaurant.addMainCourse(mainCourse3);
-    restaurant.addDessert(dessert1);
-    restaurant.addDessert(dessert2);
-    restaurant.addDessert(dessert3);*/
-
     restaurant.loadSavedOrders();
+
+    //07042025
+    /*ofstream clearFile("kitchen_notifications.txt", ios::trunc);
+    clearFile.close();*/
 
     while (true) {
         cout << "\n===================================\n";

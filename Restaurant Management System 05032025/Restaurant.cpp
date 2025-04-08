@@ -3,168 +3,23 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
-#include <ctime>       // For time functions
+#include <chrono>
+#include <thread>
+#include <ctime>    // For time functions
 #include <map>         
 #include <iomanip>     // For setw, setfill (formatting)
 #include <sstream>     // For stringstream
 
 using namespace std;
+vector<MenuItem> specialMenuItems;
 
 bool Restaurant::getActiveOrderForTable(int tableNum, Order& result) {
     return Order::getActiveOrderForTable(tableNum, orders, result);
 }
 
-
-
-Restaurant::Restaurant(int tableCount) {
-    this->tableCount = tableCount;
-    availableTables.resize(tableCount, true);
-}
-
-void Restaurant::addAppetizer(Appetizer appetizer) {
-    appetizers.push_back(appetizer);
-}
-
-void Restaurant::addMainCourse(MainCourse mainCourse) {
-    mainCourses.push_back(mainCourse);
-}
-
-void Restaurant::addDessert(Dessert dessert) {
-    desserts.push_back(dessert);
-}
-
-void Restaurant::displayMenu() {
-    cout << "Menu:\n";
-    cout << "Appetizers:\n";
-    for (size_t i = 0; i < appetizers.size(); i++) {
-        cout << (i + 1) << ". ";
-        appetizers[i].displayInfo();
-    }
-    cout << "Main Courses:\n";
-    for (size_t i = 0; i < mainCourses.size(); i++) {
-        cout << (i + 1 + appetizers.size()) << ". ";
-        mainCourses[i].displayInfo();
-    }
-    cout << "Desserts:\n";
-    for (size_t i = 0; i < desserts.size(); i++) {
-        cout << (i + 1 + appetizers.size() + mainCourses.size()) << ". ";
-        desserts[i].displayInfo();
-    }
-}
-
-void Restaurant::displayOrders() {
-    cout << "Orders:\n";
-    if (orders.empty()) {
-        cout << "No orders available.\n";
-        return;
-    }
-    for (auto& order : orders) {
-        order.displayOrder();
-    }
-}
-
-void Restaurant::createOrder(int tableNum) {
-    // Check if there's already an active order for this table
-    Order activeOrder(0);
-    if (getActiveOrderForTable(tableNum, activeOrder)) {
-        std::cout << "Table " << tableNum << " already has an active order. Please complete it first.\n";
-        return;
-    }
-
-    // Create a new order since there's no active one
-    Order newOrder(tableNum);
-    orders.push_back(newOrder);
-    availableTables[tableNum - 1] = false;
-    std::cout << "Order created for Table " << tableNum << std::endl;
-
-}
-
-void Restaurant::addOrderItem(int tableNum, MenuItem* menuItem, int qty) {
-    // Find the active order for this table
-    for (auto& order : orders) {
-        if (order.tableNumber == tableNum &&
-            order.status != "Completed" &&
-            order.status != "Paid") {
-            OrderItem orderItem(*menuItem, qty);
-            order.addItemToOrder(orderItem);
-            std::cout << "Item added to order for Table " << tableNum << std::endl;
-            return;
-        }
-    }
-    std::cout << "Table " << tableNum << " does not have an active order.\n";
-}
-
-void Restaurant::completeOrder() {
-    if (orders.empty()) {
-        cout << "No orders available.\n";
-        return;
-    }
-
-    vector<int> validIndexes;
-    cout << "Orders available to complete:\n";
-    int index = 1;
-    for (size_t i = 0; i < orders.size(); i++) {
-        if (orders[i].status == "Pending" || orders[i].status == "In Preparation") {
-            cout << index << ". Table " << orders[i].tableNumber << " (" << orders[i].status << ")\n";
-            validIndexes.push_back(static_cast<int>(i));
-            index++;
-        }
-    }
-
-    if (validIndexes.empty()) {
-        cout << "No pending or in-preparation orders available.\n";
-        return;
-    }
-
-    int choice;
-    cout << "Enter the number of the order to complete: ";
-    cin >> choice;
-
-    if (choice < 1 || choice > validIndexes.size()) {
-        cout << "Invalid selection. Please try again.\n";
-        return;
-    }
-
-    orders[validIndexes[choice - 1]].markAsCompleted();
-}
-
-void Restaurant::markInPreparation(int tableNum) {
-    for (auto& order : orders) {
-        if (order.tableNumber == tableNum) {
-            order.markInPreparation();
-            return;
-        }
-    }
-}
-
-void Restaurant::showAvailableTables() {
-    cout << "Available Tables: ";
-    for (int i = 0; i < tableCount; i++) {
-        if (availableTables[i]) {
-            cout << (i + 1) << " ";
-        }
-    }
-    cout << endl;
-}
-
-void Restaurant::viewCustomerTablesAndBills() {
-    if (orders.empty()) {
-        cout << "No orders available.\n";
-        return;
-    }
-
-    for (const auto& order : orders) {
-        cout << "Table " << order.getTableNumber() << " has the following order:\n";
-        order.displayOrder();
-        cout << "Total Bill: $" << order.calculateTotal() << "\n";
-        cout << "\n"; // Fixed: Added newline
-    }
-}
-
-
 // Load saved order
 void Restaurant::loadSavedOrders() {
-    std::ifstream file("order_details.txt");
+    std::ifstream file("kitchen_notifications.txt");// was order 
     if (!file) {
         std::cout << "No saved orders found.\n";
         return;
@@ -315,6 +170,7 @@ void Restaurant::loadMenuFromFile() {
     appetizers.clear();
     mainCourses.clear();
     desserts.clear();
+    specialMenuItems.clear();
 
     string line;
     string type, name;
@@ -354,6 +210,9 @@ void Restaurant::loadMenuFromFile() {
         else if (type == "Dessert") {
             desserts.push_back(Dessert(name, price));
         }
+        else if (type == "Special") {
+            specialMenuItems.push_back(MenuItem(name, price));
+        }
         else {
             cout << "Unknown menu item type: " << type << endl;
         }
@@ -385,10 +244,172 @@ void Restaurant::saveMenuToFile() {
         file << "Dessert|" << item.getName() << "|" << item.getPrice() << endl;
     }
 
+    //Write special menu
+    for (const auto& item : specialMenuItems) {
+        file << "Special|" << item.getName() << "|" << item.getPrice() << endl;
+    }
+
     file.close();
     cout << "Menu saved successfully to file.\n";
 }
 
+
+
+Restaurant::Restaurant(int tableCount) {
+    this->tableCount = tableCount;
+    availableTables.resize(tableCount, true);
+}
+
+void Restaurant::addAppetizer(Appetizer appetizer) {
+    appetizers.push_back(appetizer);
+}
+
+void Restaurant::addMainCourse(MainCourse mainCourse) {
+    mainCourses.push_back(mainCourse);
+}
+
+void Restaurant::addDessert(Dessert dessert) {
+    desserts.push_back(dessert);
+}
+
+void Restaurant::displayMenu() {
+    cout << "Menu:\n";
+    cout << "Appetizers:\n";
+    for (size_t i = 0; i < appetizers.size(); i++) {
+        cout << (i + 1) << ". ";
+        appetizers[i].displayInfo();
+    }
+    cout << "Main Courses:\n";
+    for (size_t i = 0; i < mainCourses.size(); i++) {
+        cout << (i + 1 + appetizers.size()) << ". ";
+        mainCourses[i].displayInfo();
+    }
+    cout << "Desserts:\n";
+    for (size_t i = 0; i < desserts.size(); i++) {
+        cout << (i + 1 + appetizers.size() + mainCourses.size()) << ". ";
+        desserts[i].displayInfo();
+    }
+    if (!specialMenuItems.empty()) {
+        cout << "Special Menu Items:\n";
+        for (size_t i = 0; i < specialMenuItems.size(); i++) {
+            cout << (i + 1 + appetizers.size() + mainCourses.size() + desserts.size()) << ". ";
+            cout << specialMenuItems[i].getName() << " - $" << specialMenuItems[i].getPrice() << " (Special!)\n";
+        }
+    }
+}
+
+void Restaurant::displayOrders() {
+    cout << "Orders:\n";
+    if (orders.empty()) {
+        cout << "No orders available.\n";
+        return;
+    }
+    for (auto& order : orders) {
+        order.displayOrder();
+    }
+}
+
+void Restaurant::createOrder(int tableNum) {
+    // Check if there's already an active order for this table
+    Order activeOrder(0);
+    if (getActiveOrderForTable(tableNum, activeOrder)) {
+        std::cout << "Table " << tableNum << " already has an active order. Please complete it first.\n";
+        return;
+    }
+
+    // Create a new order since there's no active one
+    Order newOrder(tableNum);
+    orders.push_back(newOrder);
+    availableTables[tableNum - 1] = false;
+    cout << "Order created for Table " << tableNum << endl;
+
+}
+
+void Restaurant::addOrderItem(int tableNum, MenuItem* menuItem, int qty) {
+    // Find the active order for this table
+    for (auto& order : orders) {
+        if (order.tableNumber == tableNum &&
+            order.status != "Completed" &&
+            order.status != "Paid") {
+            OrderItem orderItem(*menuItem, qty);
+            order.addItemToOrder(orderItem);
+            cout << "Item added to order for Table " << tableNum << endl;
+
+            return;
+        }
+    }
+    cout << "Table " << tableNum << " does not have an active order.\n";
+}
+
+void Restaurant::completeOrder() {
+    if (orders.empty()) {
+        cout << "No orders available.\n";
+        return;
+    }
+
+    vector<int> validIndexes;
+    cout << "Orders available to complete:\n";
+    int index = 1;
+    for (size_t i = 0; i < orders.size(); i++) {
+        if (orders[i].status == "Pending" || orders[i].status == "In Preparation") {
+            cout << index << ". Table " << orders[i].tableNumber << " (" << orders[i].status << ")\n";
+            validIndexes.push_back(static_cast<int>(i));
+            index++;
+        }
+    }
+
+    if (validIndexes.empty()) {
+        cout << "No pending or in-preparation orders available.\n";
+        return;
+    }
+
+    int choice;
+    cout << "Enter the number of the order to complete: ";
+    cin >> choice;
+
+    if (choice < 1 || choice > validIndexes.size()) {
+        cout << "Invalid selection. Please try again.\n";
+        return;
+    }
+
+    orders[validIndexes[choice - 1]].markAsCompleted();
+}
+
+void Restaurant::markInPreparation(int tableNum) {
+    for (auto& order : orders) {
+        if (order.tableNumber == tableNum) {
+            order.markInPreparation();
+            //07042025
+            writeKitchenNotification(order, "STATUS CHANGE");
+
+            return;
+        }
+    }
+}
+
+void Restaurant::showAvailableTables() {
+    cout << "Available Tables: ";
+    for (int i = 0; i < tableCount; i++) {
+        if (availableTables[i]) {
+            cout << (i + 1) << " ";
+        }
+    }
+    cout << endl;
+}
+
+void Restaurant::viewCustomerTablesAndBills() {
+    if (orders.empty()) {
+        cout << "No orders available.\n";
+        return;
+    }
+
+    for (const auto& order : orders) {
+        cout << "Table " << order.getTableNumber() << " has the following order:\n";
+        order.displayOrder();
+        cout << "Total Bill: $" << order.calculateTotal() << "\n";
+        cout << "\n"; // Fixed: Added newline
+    }
+}
 
 
 
@@ -432,12 +453,19 @@ void Restaurant::addMenuItem() {
 
 void Restaurant::removeMenuItem() {
     string type;
-    int index;
+
+    // First, check if there are any menu items to remove
+    if (appetizers.empty() && mainCourses.empty() && desserts.empty()) {
+        cout << "The menu is currently empty. Nothing to remove.\n";
+        return;
+    }
 
     cout << "Select menu type to remove from:\n";
     cout << "1. Appetizer\n";
     cout << "2. Main Course\n";
     cout << "3. Dessert\n";
+    cout << "4. Special Menu\n";  
+    cout << "5. Return to previous menu\n";  
     cout << "Enter choice: ";
 
     int typeChoice;
@@ -453,82 +481,141 @@ void Restaurant::removeMenuItem() {
     case 3:
         type = "dessert";
         break;
+    case 4:
+        type = "special";
+        break;
+    case 5:  
+        cout << "Operation cancelled.\n";
+        return;
     default:
-        cout << "Invalid choice.\n";
+        cout << "Invalid choice. Operation cancelled.\n";
         return;
     }
 
-    // Display items of the selected type
+    // Display items of the selected type and handle empty categories
     if (type == "appetizer") {
-        cout << "Appetizers:\n";
+        if (appetizers.empty()) {
+            cout << "There are no appetizers to remove.\n";
+            return;
+        }
+
+        cout << "\nAppetizers:\n";
         for (size_t i = 0; i < appetizers.size(); i++) {
             cout << (i + 1) << ". ";
             appetizers[i].displayInfo();
         }
 
-        if (appetizers.empty()) {
-            cout << "No appetizers to remove.\n";
-            return;
-        }
-
-        cout << "Enter the number of the appetizer to remove: ";
+        int index;
+        cout << "\nEnter the number of the appetizer to remove (0 to cancel): ";
         cin >> index;
 
-        if (index < 1 || index > appetizers.size()) {
-            cout << "Invalid selection.\n";
+        if (index == 0) {
+            cout << "Operation cancelled.\n";
             return;
         }
 
+        if (index < 1 || index > static_cast<int>(appetizers.size())) {
+            cout << "Invalid selection. Operation cancelled.\n";
+            return;
+        }
+
+        string removedItem = appetizers[index - 1].getName();
         appetizers.erase(appetizers.begin() + index - 1);
-        cout << "Appetizer removed successfully.\n";
+        cout << "Appetizer '" << removedItem << "' removed successfully.\n";
     }
+
     else if (type == "main") {
-        cout << "Main Courses:\n";
+        if (mainCourses.empty()) {
+            cout << "There are no main courses to remove.\n";
+            return;
+        }
+
+        cout << "\nMain Courses:\n";
         for (size_t i = 0; i < mainCourses.size(); i++) {
             cout << (i + 1) << ". ";
             mainCourses[i].displayInfo();
         }
 
-        if (mainCourses.empty()) {
-            cout << "No main courses to remove.\n";
-            return;
-        }
-
-        cout << "Enter the number of the main course to remove: ";
+        int index;
+        cout << "\nEnter the number of the main course to remove (0 to cancel): ";
         cin >> index;
 
-        if (index < 1 || index > mainCourses.size()) {
-            cout << "Invalid selection.\n";
+        if (index == 0) {
+            cout << "Operation cancelled.\n";
             return;
         }
 
+        if (index < 1 || index > static_cast<int>(mainCourses.size())) {
+            cout << "Invalid selection. Operation cancelled.\n";
+            return;
+        }
+
+        string removedItem = mainCourses[index - 1].getName();
         mainCourses.erase(mainCourses.begin() + index - 1);
-        cout << "Main course removed successfully.\n";
+        cout << "Main course '" << removedItem << "' removed successfully.\n";
     }
+
     else if (type == "dessert") {
-        cout << "Desserts:\n";
+        if (desserts.empty()) {
+            cout << "There are no desserts to remove.\n";
+            return;
+        }
+
+        cout << "\nDesserts:\n";
         for (size_t i = 0; i < desserts.size(); i++) {
             cout << (i + 1) << ". ";
             desserts[i].displayInfo();
         }
 
-        if (desserts.empty()) {
-            cout << "No desserts to remove.\n";
-            return;
-        }
-
-        cout << "Enter the number of the dessert to remove: ";
+        int index;
+        cout << "\nEnter the number of the dessert to remove (0 to cancel): ";
         cin >> index;
 
-        if (index < 1 || index > desserts.size()) {
-            cout << "Invalid selection.\n";
+        if (index == 0) {
+            cout << "Operation cancelled.\n";
             return;
         }
 
+        if (index < 1 || index > static_cast<int>(desserts.size())) {
+            cout << "Invalid selection. Operation cancelled.\n";
+            return;
+        }
+
+        string removedItem = desserts[index - 1].getName();
         desserts.erase(desserts.begin() + index - 1);
-        cout << "Dessert removed successfully.\n";
+        cout << "Dessert '" << removedItem << "' removed successfully.\n";
     }
 
+    else if (type == "special") {  // Add handling for special menu items
+        if (specialMenuItems.empty()) {
+            cout << "There are no special menu items to remove.\n";
+            return;
+        }
+
+        cout << "\nSpecial Menu Items:\n";
+        for (size_t i = 0; i < specialMenuItems.size(); i++) {
+            cout << (i + 1) << ". " << specialMenuItems[i].getName()
+                << " - $" << specialMenuItems[i].getPrice() << "\n";
+        }
+
+        int index;
+        cout << "\nEnter the number of the special menu item to remove (0 to cancel): ";
+        cin >> index;
+
+        if (index == 0) {
+            cout << "Operation cancelled.\n";
+            return;
+        }
+
+        if (index < 1 || index > static_cast<int>(specialMenuItems.size())) {
+            cout << "Invalid selection. Operation cancelled.\n";
+            return;
+        }
+
+        string removedItem = specialMenuItems[index - 1].getName();
+        specialMenuItems.erase(specialMenuItems.begin() + index - 1);
+        cout << "Special menu item '" << removedItem << "' removed successfully.\n";
+    }
     // Save menu to file after removing an item
     saveMenuToFile();
 }
@@ -545,7 +632,7 @@ void Restaurant::addSpecialMenu() {
     cout << "Enter special item price: $";
     cin >> price;
 
-    mainCourses.push_back(MainCourse(name, price));
+    specialMenuItems.push_back(MenuItem(name, price));
     cout << "Special menu item added successfully.\n";
 
     // Save menu to file after adding a special item
@@ -581,17 +668,226 @@ void Restaurant::viewAllBills() {
     cout << "Total Revenue (Completed/Paid Orders): $" << fixed << setprecision(2) << totalRevenue << endl;
 }
 
-void Restaurant ::generateSalesReport() {
-    cout << "\n========================================\n";
-    cout << "           SALES REPORT\n";
-    cout << "========================================\n\n";
+void Restaurant::displaySalesAnalytics() {
+    // Calculate some analytics
+    int totalOrders = 0;
+    int completedOrders = 0;
+    int pendingOrders = 0;
+    double totalRevenue = 0.0;
+    std::map<int, int> tableFrequency;  // Table number -> count of orders
+    
+    for (const auto& order : orders) {
+        totalOrders++;
+        
+        if (order.status == "Completed" || order.status == "Paid") {
+            completedOrders++;
+            totalRevenue += order.calculateTotal();
+        } else if (order.status == "Pending" || order.status == "In Preparation") {
+            pendingOrders++;
+        }
+        
+        tableFrequency[order.getTableNumber()]++;
+    }
+    
+    double averageOrderValue = completedOrders > 0 ? totalRevenue / completedOrders : 0;
+    
+    // Find most popular table
+    int mostPopularTable = 0;
+    int maxOrderCount = 0;
+    for (const auto& entry : tableFrequency) {
+        if (entry.second > maxOrderCount) {
+            mostPopularTable = entry.first;
+            maxOrderCount = entry.second;
+        }
+    }
+    
+    // Display analytics
+    std::cout << "SALES ANALYTICS:\n";
+    std::cout << std::string(40, '-') << std::endl;
+    std::cout << "Total Orders: " << totalOrders << std::endl;
+    std::cout << "Completed Orders: " << completedOrders << std::endl;
+    std::cout << "Pending Orders: " << pendingOrders << std::endl;
+    std::cout << "Average Order Value: $" << std::fixed << std::setprecision(2) << averageOrderValue << std::endl;
+    
+    if (mostPopularTable > 0) {
+        std::cout << "Most Active Table: Table " << mostPopularTable 
+                  << " (" << maxOrderCount << " orders)" << std::endl;
+    }
+    
+    std::cout << "\n========================================\n";
+    std::cout << "          END OF REPORT\n";
+    std::cout << "========================================\n";
+}
 
-    /*double totalRevenue = calculateTotalRevenue();
-    cout << "TOTAL REVENUE: $" << fixed << setprecision(2) << totalRevenue << "\n\n";*/
 
 
 
-    cout << "\n========================================\n";
-    cout << "          END OF REPORT\n";
-    cout << "========================================\n";
+void Restaurant::generateSalesReport() {
+    // Display header
+    std::cout << "\n========================================\n";
+    std::cout << "           SALES REPORT\n";
+    std::cout << "========================================\n\n";
+
+    // Calculate and display total revenue
+    double totalRevenue = calculateTotalRevenue();
+    std::cout << "TOTAL REVENUE: $" << std::fixed << std::setprecision(2) << totalRevenue << "\n\n";
+
+    // Display breakdown by order status
+    std::cout << "BREAKDOWN BY STATUS:\n";
+    std::cout << std::string(40, '-') << std::endl;
+    std::map<std::string, double> statusTotals;
+    std::map<std::string, int> statusCounts;
+
+    for (const auto& order : orders) {
+        statusTotals[order.status] += order.calculateTotal();
+        statusCounts[order.status]++;
+    }
+
+    for (const auto& entry : statusTotals) {
+        std::cout << std::left << std::setw(15) << entry.first
+            << std::setw(10) << statusCounts[entry.first] << " orders"
+            << "$" << std::fixed << std::setprecision(2) << entry.second << std::endl;
+    }
+    std::cout << std::endl;
+
+    // Display item sales breakdown
+    std::map<std::string, double> itemSales = getItemSalesBreakdown();
+
+    std::cout << "ITEM SALES BREAKDOWN:\n";
+    std::cout << std::string(45, '-') << std::endl;
+    std::cout << std::left << std::setw(25) << "Item"
+        << std::setw(20) << "Revenue" << std::endl;
+    std::cout << std::string(45, '-') << std::endl;
+
+    // Sort items by sales amount (highest first)
+    std::vector<std::pair<std::string, double>> sortedItems;
+    for (const auto& entry : itemSales) {
+        sortedItems.push_back(entry);
+    }
+
+    std::sort(sortedItems.begin(), sortedItems.end(),
+        [](const std::pair<std::string, double>& a, const std::pair<std::string, double>& b) {
+            return a.second > b.second;
+        });
+
+    // Display all items
+    for (const auto& item : sortedItems) {
+        std::cout << std::left << std::setw(25) << item.first
+            << "$" << std::fixed << std::setprecision(2) << item.second << std::endl;
+    }
+    std::cout << std::endl;
+
+    // Display sales analytics
+    displaySalesAnalytics();
+}
+
+double Restaurant::calculateTotalRevenue() {
+    double total = 0.0;
+    for (const auto& order : orders) {
+        if (order.status == "Completed" || order.status == "Paid") {
+            total += order.calculateTotal();
+        }
+    }
+    return total;
+}
+
+std::map<std::string, double> Restaurant::getItemSalesBreakdown() {
+    std::map<std::string, double> itemSales;
+
+    for (const auto& order : orders) {
+        if (order.status == "Completed" || order.status == "Paid") {
+            for (const auto& item : order.items) {
+                itemSales[item.item.name] += item.item.price * item.quantity;
+            }
+        }
+    }
+
+    return itemSales;
+}
+
+
+//07042025
+//Write Kitchen Notification
+void Restaurant::writeKitchenNotification(const Order& order, const std::string& action) {
+    // Get current time
+    auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::tm timeinfo;
+    localtime_s(&timeinfo, &now);
+
+    std::ofstream outFile("kitchen_notifications.txt", std::ios::app);//  kitchen_notifications.txt
+    if (!outFile) {
+        std::cerr << "Error: Unable to write kitchen notification.\n";
+        return;
+    }
+
+    // Write header with timestamp and action
+    outFile << std::put_time(&timeinfo, "%H:%M:%S")
+        << " | Action: " << action
+        << " | Table: " << order.getTableNumber()
+        << " | Status: " << order.status << "\n";
+
+    // Write order items
+    outFile << "  Items:\n";
+    for (const auto& item : order.items) {
+        outFile << "    - " << item.item.name << " x" << item.quantity << "\n";
+    }
+
+    // Write total with fixed precision
+    outFile << std::fixed << std::setprecision(2);
+    outFile << "  Total: $" << order.calculateTotal() << "\n";
+
+   // outFile << "--------------------------------------------------\n";
+}
+
+// Static function to monitor kitchen notifications in a separate console
+void Restaurant::monitorKitchenNotifications() {
+    std::cout << "===== KITCHEN DISPLAY SYSTEM =====" << std::endl;
+    std::cout << "Monitoring for new orders and updates..." << std::endl;
+    std::cout << "Press [Enter] to stop monitoring.\n" << std::endl;
+
+    std::ifstream file;
+    std::string line;
+    long lastPosition = 0;
+
+    std::thread inputThread([]() {
+        std::cin.get(); // Wait for user to press Enter
+        std::exit(0);   // Exit program gracefully
+        });
+
+    while (true) {
+        file.open("kitchen_notifications.txt");//order_details.txt
+       // file.open("kitchen_notifications.txt");
+        if (file) {
+            // Get current file size
+            file.seekg(0, std::ios::end);
+            std::streamoff currentSize = file.tellg();
+
+            // If new content is available
+            if (currentSize > lastPosition) {
+                file.seekg(lastPosition, std::ios::beg);
+                std::cout << "\n----- New Update -----\n";
+
+                while (std::getline(file, line)) {
+                    std::cout << line << std::endl;
+                }
+
+                std::cout << "----------------------\n";
+
+                // Update lastPosition to new end of file
+                lastPosition = currentSize;
+            }
+
+            file.close();
+        }
+        else {
+            std::cout << "Error opening kitchen_notifications.txt" << std::endl;
+        }
+
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+
+    // Cleanup
+    if (inputThread.joinable()) {
+        inputThread.join();
+    }
 }

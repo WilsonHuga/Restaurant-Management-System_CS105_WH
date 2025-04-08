@@ -5,6 +5,7 @@
 #include "Order.h"
 #include <vector>
 #include <string>
+#include <map>
 
 class Restaurant {
 public:
@@ -13,6 +14,7 @@ public:
     std::vector<Dessert> desserts;
     std::vector<Order> orders;
     std::vector<bool> availableTables;
+    std::vector<MenuItem> specialMenuItems;
 
     int tableCount;
 
@@ -41,11 +43,20 @@ public:
     // Manager usage 
     void viewAllBills();
     void generateSalesReport();
+    void displaySalesAnalytics();
+    double calculateTotalRevenue();
+    std::map<std::string, double> getItemSalesBreakdown();
     //double calculateTotalRevenue();
 
 
     void loadMenuFromFile();
     void saveMenuToFile();
+
+
+    // live system 
+    // Kitchen notification system
+    void writeKitchenNotification(const Order& order, const std::string& action);
+    static void monitorKitchenNotifications();
 };
 
 #endif

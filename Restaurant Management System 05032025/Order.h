@@ -21,6 +21,11 @@ public:
     double total;
     std::vector<OrderItem> items;
     
+    //06042025
+    /*string orderID;
+    string orderTime;*/
+
+
     Order(int tableNum);
     void addItemToOrder(const OrderItem& orderItem);
     void displayOrder() const;

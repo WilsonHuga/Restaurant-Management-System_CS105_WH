@@ -1,0 +1,16 @@
+Order for Table 1 (Pending):
+Salmon x67 - $1206
+Total: $1206
+
+15:50:12 | Action: NEW ORDER | Table: 1 | Status: Pending
+  Items:
+    - Salmon x67
+  Total: $1206.00
+Order for Table 2 (Pending):
+Steak x4 - $80
+Total: $80
+
+15:54:07 | Action: NEW ORDER | Table: 2 | Status: Pending
+  Items:
+    - Steak x4
+  Total: $80.00

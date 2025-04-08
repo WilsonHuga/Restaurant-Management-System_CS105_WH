@@ -24,6 +24,7 @@ Order::Order(int tableNum) {
     total = 0.0;
 }
 
+
 void Order::addItemToOrder(const OrderItem& orderItem) {
     items.push_back(orderItem);
     total += orderItem.item.price * orderItem.quantity;
@@ -41,7 +42,7 @@ void Order::displayOrder() const { // Added const
 //020452025
 void Order::updateOrderStatusInFile() {
     // Read the entire file
-    std::ifstream inFile("order_details.txt");
+    std::ifstream inFile("kitchen_notifications.txt");// was order tx 
     if (!inFile) {
         std::cout << "Error: Unable to open order file for reading.\n";
         return;
@@ -70,7 +71,7 @@ void Order::updateOrderStatusInFile() {
     }
 
     // Write the updated content back to the file
-    std::ofstream outFile("order_details.txt");
+    std::ofstream outFile("kitchen_notifications.txt");//was order txt 
     if (!outFile) {
         std::cout << "Error: Unable to open order file for writing.\n";
         return;
@@ -119,11 +120,10 @@ void Order::payOrder() {
     saveOrderToFile();
 }
 
-//02042025
 void Order::saveOrderToFile() {
     // First read all existing orders from the file
     std::vector<std::string> fileContents;
-    std::ifstream inFile("order_details.txt");
+	std::ifstream inFile("kitchen_notifications.txt");//was order txt
     if (inFile.is_open()) {
         std::string line;
         while (getline(inFile, line)) {
@@ -142,7 +142,7 @@ void Order::saveOrderToFile() {
     orderContent << "Total: $" << total << std::endl << std::endl;
 
     // Open file for writing (append mode)
-    std::ofstream outFile("order_details.txt", std::ios::app);
+	std::ofstream outFile("kitchen_notifications.txt", std::ios::app);// was order txt
     if (!outFile.is_open()) {
         std::cout << "Error: Unable to open order file for writing.\n";
         return;
@@ -170,7 +170,7 @@ int Order::getTableNumber() const { // Added const
 }
 
 void Order::loadOrdersFromFile(std::vector<Order>& orders) {
-    ifstream inFile("order_details.txt");
+	ifstream inFile("kitchen_notifications.txt");// was order txt
     if (!inFile) {
         cout << "Error: Unable to open file for reading.\n";
         return;
