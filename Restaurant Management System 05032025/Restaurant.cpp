@@ -785,7 +785,7 @@ double Restaurant::calculateTotalRevenue() {
         if (order.status == "Completed" || order.status == "Paid") {
             total += order.calculateTotal();
         }
-    }6
+    }
     return total;
 }
 
