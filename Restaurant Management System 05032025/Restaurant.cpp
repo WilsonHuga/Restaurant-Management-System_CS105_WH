@@ -4,6 +4,7 @@
 #include <fstream>
 #include <algorithm>
 #include <chrono>
+#include <vector>
 #include <thread>
 #include <ctime>    // For time functions
 #include <map>         
@@ -719,9 +720,6 @@ void Restaurant::displaySalesAnalytics() {
     std::cout << "========================================\n";
 }
 
-
-
-
 void Restaurant::generateSalesReport() {
     // Display header
     std::cout << "\n========================================\n";
@@ -787,7 +785,7 @@ double Restaurant::calculateTotalRevenue() {
         if (order.status == "Completed" || order.status == "Paid") {
             total += order.calculateTotal();
         }
-    }
+    }6
     return total;
 }
 
@@ -839,6 +837,7 @@ void Restaurant::writeKitchenNotification(const Order& order, const std::string&
    // outFile << "--------------------------------------------------\n";
 }
 
+
 // Static function to monitor kitchen notifications in a separate console
 void Restaurant::monitorKitchenNotifications() {
     std::cout << "===== KITCHEN DISPLAY SYSTEM =====" << std::endl;
@@ -846,6 +845,7 @@ void Restaurant::monitorKitchenNotifications() {
     std::cout << "Press [Enter] to stop monitoring.\n" << std::endl;
 
     std::ifstream file;
+    std::vector<std::string> block;
     std::string line;
     long lastPosition = 0;
 
@@ -859,7 +859,7 @@ void Restaurant::monitorKitchenNotifications() {
        // file.open("kitchen_notifications.txt");
         if (file) {
             // Get current file size
-            file.seekg(0, std::ios::end);
+            file.seekg(0, ios::end);
             std::streamoff currentSize = file.tellg();
 
             // If new content is available
@@ -867,14 +867,38 @@ void Restaurant::monitorKitchenNotifications() {
                 file.seekg(lastPosition, std::ios::beg);
                 std::cout << "\n----- New Update -----\n";
 
+                std::string line;
+                block.clear(); // Clear the block for the new content
+
+                // Read the file line by line
                 while (std::getline(file, line)) {
-                    std::cout << line << std::endl;
+                    // If the line is empty, we've reached the end of a block
+                    if (line.empty()) {
+                        // Check if the block matches the desired format
+                        if (isValidNotificationBlock(block)) {
+                            // Print the entire block
+                            for (const auto& blockLine : block) {
+                                std::cout << blockLine << std::endl;
+                            }
+                        }
+                        block.clear(); // Clear for the next block
+                    }
+                    else {
+                        block.push_back(line); // Add line to the current block
+                    }
+                }
+
+                // Handle the last block if it exists (in case the file doesn't end with a newline)
+                if (!block.empty() && isValidNotificationBlock(block)) {
+                    for (const auto& blockLine : block) {
+                        std::cout << blockLine << std::endl;
+                    }
                 }
 
                 std::cout << "----------------------\n";
 
                 // Update lastPosition to new end of file
-                lastPosition = currentSize;
+                lastPosition = lastPosition = static_cast<long>(currentSize);
             }
 
             file.close();
@@ -890,4 +914,70 @@ void Restaurant::monitorKitchenNotifications() {
     if (inputThread.joinable()) {
         inputThread.join();
     }
+}
+
+//Function to check if a block of lines is a valid
+
+bool Restaurant::isValidNotificationBlock(const vector<string>& block) {
+    if (block.size() < 4) {
+        return false; //
+    }
+
+    const std::string& header = block[0];
+    if (header.length() < 8 || header.substr(2, 1) != ":" || header.substr(5, 1) != ":" ||
+        header.find("| Action: ") == std::string::npos ||
+        header.find("| Table: ") == std::string::npos ||
+        header.find("| Status: ") == std::string::npos) {
+        return false; // Header doesn't match the expected format
+    }
+
+    // Check the second line ("  Items:")
+    if (block[1] != "  Items:") {
+        return false;
+    }
+
+    bool hasItem = false;
+    size_t i = 2;
+    for (; i < block.size(); ++i) {
+        const std::string& line = block[i];
+        if (line.find("    - ") == 0) {
+            hasItem = true;
+            // Validate item format: "    - NAME xQUANTITY"
+            size_t xPos = line.find(" x");
+            if (xPos == std::string::npos || xPos + 2 >= line.length()) {
+                return false;
+            }
+            std::string quantityStr = line.substr(xPos + 2);
+            try {
+                std::stoi(quantityStr); // Ensure quantity is a number
+            }
+            catch (...) {
+                return false; // Quantity is not a valid number
+            }
+        }
+        else {
+            break; // No more item lines
+        }
+    }
+
+    if (!hasItem) {
+        return false; // No items found
+    }
+
+    // Check the last line ("  Total: $...")
+    const std::string& totalLine = block[i];
+    if (totalLine.find("  Total: $") != 0) {
+        return false;
+    }
+
+    // Validate the total amount
+    std::string totalStr = totalLine.substr(10); // After "  Total: $"
+    try {
+        std::stod(totalStr); // Ensure total is a valid number
+    }
+    catch (...) {
+        return false; // Total is not a valid number
+    }
+
+    return true;
 }

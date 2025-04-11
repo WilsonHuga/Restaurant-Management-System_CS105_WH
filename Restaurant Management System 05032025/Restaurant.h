@@ -56,6 +56,7 @@ public:
     // live system 
     // Kitchen notification system
     void writeKitchenNotification(const Order& order, const std::string& action);
+    static bool isValidNotificationBlock(const std::vector<std::string>& block);
     static void monitorKitchenNotifications();
 };
 

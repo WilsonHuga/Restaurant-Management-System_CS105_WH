@@ -50,14 +50,18 @@ void kitchenAttendantMenu(Restaurant& restaurant) {
     int choice;
     int tableNum;
     bool found;
+    //restaurant.loadSavedOrders();
 
     while (true) {
+        restaurant.loadSavedOrders();
+
         cout << "\n==== Kitchen Attendant Menu ====\n";
         cout << "1. View All Orders\n";
         cout << "2. View Active Orders\n";
         cout << "3. Mark Order as In Preparation\n";
         cout << "4. Mark Order as Completed\n";
         cout << "5. Return to Main Menu\n";
+        cout << endl;
         cout << "6. Monitor Kitchen Notifications\n";
         cout << "Enter your choice: ";
         cin >> choice;
@@ -160,6 +164,7 @@ void kitchenAttendantMenu(Restaurant& restaurant) {
                 };
 
             messageManager.startMonitor(displayFunc, hasChangesFunc, 7);
+            restaurant.loadSavedOrders();
             break;
         }
         default:
