@@ -20,69 +20,62 @@ bool Restaurant::getActiveOrderForTable(int tableNum, Order& result) {
 
 // Load saved order
 void Restaurant::loadSavedOrders() {
-    std::ifstream file("kitchen_notifications.txt");// was order 
+    ifstream file("kitchen_notifications.txt");
     if (!file) {
-        std::cout << "No saved orders found.\n";
+        cout << "No saved orders found.\n";
         return;
     }
 
     orders.clear();
-    std::string line;
+    string line;
     Order* currentOrder = nullptr;
     bool readingOrder = false;
 
     while (getline(file, line)) {
-        if (line.find("Order for Table") != std::string::npos) {
-            // If we were reading an order, save it before starting a new one
+        if (line.find("Order for Table") != string::npos) {
             if (currentOrder != nullptr) {
                 orders.push_back(*currentOrder);
                 delete currentOrder;
                 currentOrder = nullptr;
             }
 
-            // Extract table number and status
             int tableNum = 0;
-            std::string statusStr;
+            string statusStr;
 
-            // Parse the table number
             size_t tablePos = line.find("Table") + 6;
             size_t spacePos = line.find(" ", tablePos);
-            if (spacePos == std::string::npos) {
+            if (spacePos == string::npos) {
                 spacePos = line.find("(", tablePos);
             }
-            std::string tableNumStr = line.substr(tablePos, spacePos - tablePos);
-            tableNum = std::stoi(tableNumStr);
+            string tableNumStr = line.substr(tablePos, spacePos - tablePos);
+            tableNum = stoi(tableNumStr);
 
-            // Parse the status
             size_t statusStart = line.find("(") + 1;
             size_t statusEnd = line.find(")");
-            if (statusStart != std::string::npos && statusEnd != std::string::npos) {
+            if (statusStart != string::npos && statusEnd != string::npos) {
                 statusStr = line.substr(statusStart, statusEnd - statusStart);
             }
             else {
-                statusStr = "Pending"; // Default status if not specified
+                statusStr = "Pending";
             }
 
-            // Create new order
             currentOrder = new Order(tableNum);
             currentOrder->status = statusStr;
             readingOrder = true;
         }
-        else if (readingOrder && line.find("Total: $") != std::string::npos) {
-            // Extract total
+        else if (readingOrder && line.find("Total: $") != string::npos) {
             size_t dollarPos = line.find("$");
-            if (dollarPos != std::string::npos) {
-                std::string totalStr = line.substr(dollarPos + 1);
+            if (dollarPos != string::npos) {
+                string totalStr = line.substr(dollarPos + 1);
                 try {
-                    currentOrder->total = std::stod(totalStr);
+                    currentOrder->total = stod(totalStr);
                 }
                 catch (...) {
-                    currentOrder->total = 0.0; // Default if parsing fails
+                    currentOrder->total = 0.0;
                 }
             }
             readingOrder = false;
 
-            // Add the order to our list
             if (currentOrder != nullptr) {
                 orders.push_back(*currentOrder);
                 delete currentOrder;
@@ -90,36 +83,31 @@ void Restaurant::loadSavedOrders() {
             }
         }
         else if (readingOrder && !line.empty() && currentOrder != nullptr) {
-            // Parse order items
-            // Format: "Item Name xQ - $P"
             size_t quantityPos = line.find(" x");
             size_t pricePos = line.find(" - $");
 
-            if (quantityPos != std::string::npos && pricePos != std::string::npos) {
-                std::string itemName = line.substr(0, quantityPos);
+            if (quantityPos != string::npos && pricePos != string::npos) {
+                string itemName = line.substr(0, quantityPos);
 
                 try {
-                    std::string quantityStr = line.substr(quantityPos + 2, pricePos - quantityPos - 2);
-                    int quantity = std::stoi(quantityStr);
+                    string quantityStr = line.substr(quantityPos + 2, pricePos - quantityPos - 2);
+                    int quantity = stoi(quantityStr);
 
-                    std::string priceStr = line.substr(pricePos + 4);
-                    double itemTotal = std::stod(priceStr);
+                    string priceStr = line.substr(pricePos + 4);
+                    double itemTotal = stod(priceStr);
                     double itemPrice = quantity > 0 ? itemTotal / quantity : 0;
 
-                    // Create menu item and add to order
                     MenuItem item(itemName, itemPrice);
                     OrderItem orderItem(item, quantity);
                     currentOrder->items.push_back(orderItem);
                 }
                 catch (...) {
-                    // Skip this item if parsing fails
-                    std::cout << "Warning: Failed to parse order item: " << line << std::endl;
+                    cout << "Warning: Failed to parse order item: " << line << endl;
                 }
             }
         }
     }
 
-    // Add the last order if we haven't yet
     if (currentOrder != nullptr) {
         orders.push_back(*currentOrder);
         delete currentOrder;
@@ -127,31 +115,25 @@ void Restaurant::loadSavedOrders() {
 
     file.close();
 
-    // Update table availability
     updateTableAvailability();
 
-    std::cout << "Loaded " << orders.size() << " orders from file.\n";
+    cout << "Loaded " << orders.size() << " orders from file.\n";
 }
 
 void Restaurant::updateTableAvailability() {
-    // First, mark all tables as available
     for (int i = 0; i < tableCount; i++) {
         availableTables[i] = true;
     }
 
-    // Keep track of the most recent order status for each table
-    std::map<int, std::string> latestOrderStatus;
+    map<int, string> latestOrderStatus;
 
-    // Check all orders in memory
     for (const auto& order : orders) {
-        // Store the status of this order
         latestOrderStatus[order.tableNumber] = order.status;
     }
 
-    // Now mark tables as unavailable based on the latest status
     for (const auto& entry : latestOrderStatus) {
         int tableNum = entry.first;
-        const std::string& status = entry.second;
+        const string& status = entry.second;
         if (status != "Completed" && status != "Paid" &&
             tableNum > 0 && tableNum <= tableCount) {
             availableTables[tableNum - 1] = false;
@@ -159,7 +141,6 @@ void Restaurant::updateTableAvailability() {
     }
 }
 
-// Load menu from menu.txt
 void Restaurant::loadMenuFromFile() {
     ifstream file("menu.txt");
     if (!file) {
@@ -167,7 +148,6 @@ void Restaurant::loadMenuFromFile() {
         return;
     }
 
-    // Clear existing menu items
     appetizers.clear();
     mainCourses.clear();
     desserts.clear();
@@ -178,20 +158,13 @@ void Restaurant::loadMenuFromFile() {
     double price;
 
     while (getline(file, line)) {
-        // Skip empty lines
         if (line.empty()) continue;
 
-        // Parse the line (format: TYPE|NAME|PRICE)
         stringstream ss(line);
         string token;
 
-        // Get type
         getline(ss, type, '|');
-
-        // Get name
         getline(ss, name, '|');
-
-        // Get price
         getline(ss, token, '|');
         try {
             price = stod(token);
@@ -201,7 +174,6 @@ void Restaurant::loadMenuFromFile() {
             continue;
         }
 
-        // Add to appropriate vector based on type
         if (type == "Appetizer") {
             appetizers.push_back(Appetizer(name, price));
         }
@@ -230,22 +202,18 @@ void Restaurant::saveMenuToFile() {
         return;
     }
 
-    // Write appetizers
     for (const auto& item : appetizers) {
         file << "Appetizer|" << item.getName() << "|" << item.getPrice() << endl;
     }
 
-    // Write main courses
     for (const auto& item : mainCourses) {
         file << "MainCourse|" << item.getName() << "|" << item.getPrice() << endl;
     }
 
-    // Write desserts
     for (const auto& item : desserts) {
         file << "Dessert|" << item.getName() << "|" << item.getPrice() << endl;
     }
 
-    //Write special menu
     for (const auto& item : specialMenuItems) {
         file << "Special|" << item.getName() << "|" << item.getPrice() << endl;
     }
@@ -253,8 +221,6 @@ void Restaurant::saveMenuToFile() {
     file.close();
     cout << "Menu saved successfully to file.\n";
 }
-
-
 
 Restaurant::Restaurant(int tableCount) {
     this->tableCount = tableCount;
@@ -311,23 +277,19 @@ void Restaurant::displayOrders() {
 }
 
 void Restaurant::createOrder(int tableNum) {
-    // Check if there's already an active order for this table
     Order activeOrder(0);
     if (getActiveOrderForTable(tableNum, activeOrder)) {
-        std::cout << "Table " << tableNum << " already has an active order. Please complete it first.\n";
+        cout << "Table " << tableNum << " already has an active order. Please complete it first.\n";
         return;
     }
 
-    // Create a new order since there's no active one
     Order newOrder(tableNum);
     orders.push_back(newOrder);
     availableTables[tableNum - 1] = false;
     cout << "Order created for Table " << tableNum << endl;
-
 }
 
 void Restaurant::addOrderItem(int tableNum, MenuItem* menuItem, int qty) {
-    // Find the active order for this table
     for (auto& order : orders) {
         if (order.tableNumber == tableNum &&
             order.status != "Completed" &&
@@ -335,7 +297,6 @@ void Restaurant::addOrderItem(int tableNum, MenuItem* menuItem, int qty) {
             OrderItem orderItem(*menuItem, qty);
             order.addItemToOrder(orderItem);
             cout << "Item added to order for Table " << tableNum << endl;
-
             return;
         }
     }
@@ -380,9 +341,7 @@ void Restaurant::markInPreparation(int tableNum) {
     for (auto& order : orders) {
         if (order.tableNumber == tableNum) {
             order.markInPreparation();
-            //07042025
             writeKitchenNotification(order, "STATUS CHANGE");
-
             return;
         }
     }
@@ -408,19 +367,15 @@ void Restaurant::viewCustomerTablesAndBills() {
         cout << "Table " << order.getTableNumber() << " has the following order:\n";
         order.displayOrder();
         cout << "Total Bill: $" << order.calculateTotal() << "\n";
-        cout << "\n"; // Fixed: Added newline
+        cout << "\n";
     }
 }
-
-
-
-// Manager usage
 
 void Restaurant::addMenuItem() {
     string type, name;
     double price;
 
-    cin.ignore(); // Clear input buffer
+    cin.ignore();
 
     cout << "Enter menu type (appetizer, main, dessert): ";
     getline(cin, type);
@@ -448,14 +403,12 @@ void Restaurant::addMenuItem() {
         return;
     }
 
-    // Save menu to file after adding an item
     saveMenuToFile();
 }
 
 void Restaurant::removeMenuItem() {
     string type;
 
-    // First, check if there are any menu items to remove
     if (appetizers.empty() && mainCourses.empty() && desserts.empty()) {
         cout << "The menu is currently empty. Nothing to remove.\n";
         return;
@@ -465,8 +418,8 @@ void Restaurant::removeMenuItem() {
     cout << "1. Appetizer\n";
     cout << "2. Main Course\n";
     cout << "3. Dessert\n";
-    cout << "4. Special Menu\n";  
-    cout << "5. Return to previous menu\n";  
+    cout << "4. Special Menu\n";
+    cout << "5. Return to previous menu\n";
     cout << "Enter choice: ";
 
     int typeChoice;
@@ -485,7 +438,7 @@ void Restaurant::removeMenuItem() {
     case 4:
         type = "special";
         break;
-    case 5:  
+    case 5:
         cout << "Operation cancelled.\n";
         return;
     default:
@@ -493,7 +446,6 @@ void Restaurant::removeMenuItem() {
         return;
     }
 
-    // Display items of the selected type and handle empty categories
     if (type == "appetizer") {
         if (appetizers.empty()) {
             cout << "There are no appetizers to remove.\n";
@@ -587,7 +539,7 @@ void Restaurant::removeMenuItem() {
         cout << "Dessert '" << removedItem << "' removed successfully.\n";
     }
 
-    else if (type == "special") {  // Add handling for special menu items
+    else if (type == "special") {
         if (specialMenuItems.empty()) {
             cout << "There are no special menu items to remove.\n";
             return;
@@ -617,7 +569,7 @@ void Restaurant::removeMenuItem() {
         specialMenuItems.erase(specialMenuItems.begin() + index - 1);
         cout << "Special menu item '" << removedItem << "' removed successfully.\n";
     }
-    // Save menu to file after removing an item
+
     saveMenuToFile();
 }
 
@@ -625,7 +577,7 @@ void Restaurant::addSpecialMenu() {
     string name;
     double price;
 
-    cin.ignore(); // Clear input buffer
+    cin.ignore();
 
     cout << "Enter special menu item name: ";
     getline(cin, name);
@@ -636,7 +588,6 @@ void Restaurant::addSpecialMenu() {
     specialMenuItems.push_back(MenuItem(name, price));
     cout << "Special menu item added successfully.\n";
 
-    // Save menu to file after adding a special item
     saveMenuToFile();
 }
 
@@ -649,7 +600,7 @@ void Restaurant::viewAllBills() {
 
     double totalRevenue = 0.0;
 
-    cout << left << std::setw(10) << "Table"
+    cout << left << setw(10) << "Table"
         << setw(15) << "Status"
         << setw(10) << "Amount" << endl;
     cout << string(40, '-') << endl;
@@ -659,7 +610,6 @@ void Restaurant::viewAllBills() {
             << setw(15) << order.status
             << "$" << fixed << setprecision(2) << order.calculateTotal() << endl;
 
-        // Only count completed or paid orders towards revenue
         if (order.status == "Completed" || order.status == "Paid") {
             totalRevenue += order.calculateTotal();
         }
@@ -670,29 +620,28 @@ void Restaurant::viewAllBills() {
 }
 
 void Restaurant::displaySalesAnalytics() {
-    // Calculate some analytics
     int totalOrders = 0;
     int completedOrders = 0;
     int pendingOrders = 0;
     double totalRevenue = 0.0;
-    std::map<int, int> tableFrequency;  // Table number -> count of orders
-    
+    map<int, int> tableFrequency;
+
     for (const auto& order : orders) {
         totalOrders++;
-        
+
         if (order.status == "Completed" || order.status == "Paid") {
             completedOrders++;
             totalRevenue += order.calculateTotal();
-        } else if (order.status == "Pending" || order.status == "In Preparation") {
+        }
+        else if (order.status == "Pending" || order.status == "In Preparation") {
             pendingOrders++;
         }
-        
+
         tableFrequency[order.getTableNumber()]++;
     }
-    
+
     double averageOrderValue = completedOrders > 0 ? totalRevenue / completedOrders : 0;
-    
-    // Find most popular table
+
     int mostPopularTable = 0;
     int maxOrderCount = 0;
     for (const auto& entry : tableFrequency) {
@@ -701,40 +650,36 @@ void Restaurant::displaySalesAnalytics() {
             maxOrderCount = entry.second;
         }
     }
-    
-    // Display analytics
-    std::cout << "SALES ANALYTICS:\n";
-    std::cout << std::string(40, '-') << std::endl;
-    std::cout << "Total Orders: " << totalOrders << std::endl;
-    std::cout << "Completed Orders: " << completedOrders << std::endl;
-    std::cout << "Pending Orders: " << pendingOrders << std::endl;
-    std::cout << "Average Order Value: $" << std::fixed << std::setprecision(2) << averageOrderValue << std::endl;
-    
+
+    cout << "SALES ANALYTICS:\n";
+    cout << string(40, '-') << endl;
+    cout << "Total Orders: " << totalOrders << endl;
+    cout << "Completed Orders: " << completedOrders << endl;
+    cout << "Pending Orders: " << pendingOrders << endl;
+    cout << "Average Order Value: $" << fixed << setprecision(2) << averageOrderValue << endl;
+
     if (mostPopularTable > 0) {
-        std::cout << "Most Active Table: Table " << mostPopularTable 
-                  << " (" << maxOrderCount << " orders)" << std::endl;
+        cout << "Most Active Table: Table " << mostPopularTable
+            << " (" << maxOrderCount << " orders)" << endl;
     }
-    
-    std::cout << "\n========================================\n";
-    std::cout << "          END OF REPORT\n";
-    std::cout << "========================================\n";
+
+    cout << "\n========================================\n";
+    cout << "          END OF REPORT\n";
+    cout << "========================================\n";
 }
 
 void Restaurant::generateSalesReport() {
-    // Display header
-    std::cout << "\n========================================\n";
-    std::cout << "           SALES REPORT\n";
-    std::cout << "========================================\n\n";
+    cout << "\n========================================\n";
+    cout << "           SALES REPORT\n";
+    cout << "========================================\n\n";
 
-    // Calculate and display total revenue
     double totalRevenue = calculateTotalRevenue();
-    std::cout << "TOTAL REVENUE: $" << std::fixed << std::setprecision(2) << totalRevenue << "\n\n";
+    cout << "TOTAL REVENUE: $" << fixed << setprecision(2) << totalRevenue << "\n\n";
 
-    // Display breakdown by order status
-    std::cout << "BREAKDOWN BY STATUS:\n";
-    std::cout << std::string(40, '-') << std::endl;
-    std::map<std::string, double> statusTotals;
-    std::map<std::string, int> statusCounts;
+    cout << "BREAKDOWN BY STATUS:\n";
+    cout << string(40, '-') << endl;
+    map<string, double> statusTotals;
+    map<string, int> statusCounts;
 
     for (const auto& order : orders) {
         statusTotals[order.status] += order.calculateTotal();
@@ -742,40 +687,36 @@ void Restaurant::generateSalesReport() {
     }
 
     for (const auto& entry : statusTotals) {
-        std::cout << std::left << std::setw(15) << entry.first
-            << std::setw(10) << statusCounts[entry.first] << " orders"
-            << "$" << std::fixed << std::setprecision(2) << entry.second << std::endl;
+        cout << left << setw(15) << entry.first
+            << setw(10) << statusCounts[entry.first] << " orders"
+            << "$" << fixed << setprecision(2) << entry.second << endl;
     }
-    std::cout << std::endl;
+    cout << endl;
 
-    // Display item sales breakdown
-    std::map<std::string, double> itemSales = getItemSalesBreakdown();
+    map<string, double> itemSales = getItemSalesBreakdown();
 
-    std::cout << "ITEM SALES BREAKDOWN:\n";
-    std::cout << std::string(45, '-') << std::endl;
-    std::cout << std::left << std::setw(25) << "Item"
-        << std::setw(20) << "Revenue" << std::endl;
-    std::cout << std::string(45, '-') << std::endl;
+    cout << "ITEM SALES BREAKDOWN:\n";
+    cout << string(45, '-') << endl;
+    cout << left << setw(25) << "Item"
+        << setw(20) << "Revenue" << endl;
+    cout << string(45, '-') << endl;
 
-    // Sort items by sales amount (highest first)
-    std::vector<std::pair<std::string, double>> sortedItems;
+    vector<pair<string, double>> sortedItems;
     for (const auto& entry : itemSales) {
         sortedItems.push_back(entry);
     }
 
-    std::sort(sortedItems.begin(), sortedItems.end(),
-        [](const std::pair<std::string, double>& a, const std::pair<std::string, double>& b) {
+    sort(sortedItems.begin(), sortedItems.end(),
+        [](const pair<string, double>& a, const pair<string, double>& b) {
             return a.second > b.second;
         });
 
-    // Display all items
     for (const auto& item : sortedItems) {
-        std::cout << std::left << std::setw(25) << item.first
-            << "$" << std::fixed << std::setprecision(2) << item.second << std::endl;
+        cout << left << setw(25) << item.first
+            << "$" << fixed << setprecision(2) << item.second << endl;
     }
-    std::cout << std::endl;
+    cout << endl;
 
-    // Display sales analytics
     displaySalesAnalytics();
 }
 
@@ -789,8 +730,8 @@ double Restaurant::calculateTotalRevenue() {
     return total;
 }
 
-std::map<std::string, double> Restaurant::getItemSalesBreakdown() {
-    std::map<std::string, double> itemSales;
+map<string, double> Restaurant::getItemSalesBreakdown() {
+    map<string, double> itemSales;
 
     for (const auto& order : orders) {
         if (order.status == "Completed" || order.status == "Paid") {
@@ -803,135 +744,113 @@ std::map<std::string, double> Restaurant::getItemSalesBreakdown() {
     return itemSales;
 }
 
-
-//07042025
-//Write Kitchen Notification
-void Restaurant::writeKitchenNotification(const Order& order, const std::string& action) {
-    // Get current time
-    auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    std::tm timeinfo;
+void Restaurant::writeKitchenNotification(const Order& order, const string& action) {
+    auto now = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    tm timeinfo;
     localtime_s(&timeinfo, &now);
 
-    std::ofstream outFile("kitchen_notifications.txt", std::ios::app);//  kitchen_notifications.txt
+    ofstream outFile("kitchen_notifications.txt", ios::app);
     if (!outFile) {
-        std::cerr << "Error: Unable to write kitchen notification.\n";
+        cerr << "Error: Unable to write kitchen notification.\n";
         return;
     }
 
-    // Write header with timestamp and action
-    outFile << std::put_time(&timeinfo, "%H:%M:%S")
+    outFile << put_time(&timeinfo, "%H:%M:%S")
         << " | Action: " << action
         << " | Table: " << order.getTableNumber()
         << " | Status: " << order.status << "\n";
 
-    // Write order items
     outFile << "  Items:\n";
     for (const auto& item : order.items) {
         outFile << "    - " << item.item.name << " x" << item.quantity << "\n";
     }
 
-    // Write total with fixed precision
-    outFile << std::fixed << std::setprecision(2);
+    outFile << fixed << setprecision(2);
     outFile << "  Total: $" << order.calculateTotal() << "\n";
 
-   // outFile << "--------------------------------------------------\n";
+    outFile.close();
 }
 
-
-// Static function to monitor kitchen notifications in a separate console
 void Restaurant::monitorKitchenNotifications() {
-    std::cout << "===== KITCHEN DISPLAY SYSTEM =====" << std::endl;
-    std::cout << "Monitoring for new orders and updates..." << std::endl;
-    std::cout << "Press [Enter] to stop monitoring.\n" << std::endl;
+    cout << "===== KITCHEN DISPLAY SYSTEM =====" << endl;
+    cout << "Monitoring for new orders and updates..." << endl;
+    cout << "Press [Enter] to stop monitoring.\n" << endl;
 
-    std::ifstream file;
-    std::vector<std::string> block;
-    std::string line;
+    ifstream file;
+    vector<string> block;
+    string line;
     long lastPosition = 0;
 
-    std::thread inputThread([]() {
-        std::cin.get(); // Wait for user to press Enter
-        std::exit(0);   // Exit program gracefully
+    thread inputThread([]() {
+        cin.get();
+        exit(0);
         });
 
     while (true) {
-        file.open("kitchen_notifications.txt");//order_details.txt
-       // file.open("kitchen_notifications.txt");
+        file.open("kitchen_notifications.txt");
         if (file) {
-            // Get current file size
             file.seekg(0, ios::end);
-            std::streamoff currentSize = file.tellg();
+            streamoff currentSize = file.tellg();
 
-            // If new content is available
             if (currentSize > lastPosition) {
-                file.seekg(lastPosition, std::ios::beg);
-                std::cout << "\n----- New Update -----\n";
+                file.seekg(lastPosition, ios::beg);
+                cout << "\n----- New Update -----\n";
 
-                std::string line;
-                block.clear(); // Clear the block for the new content
+                string line;
+                block.clear();
 
-                // Read the file line by line
-                while (std::getline(file, line)) {
-                    // If the line is empty, we've reached the end of a block
+                while (getline(file, line)) {
                     if (line.empty()) {
-                        // Check if the block matches the desired format
                         if (isValidNotificationBlock(block)) {
-                            // Print the entire block
                             for (const auto& blockLine : block) {
-                                std::cout << blockLine << std::endl;
+                                cout << blockLine << endl;
                             }
                         }
-                        block.clear(); // Clear for the next block
+                        block.clear();
                     }
                     else {
-                        block.push_back(line); // Add line to the current block
+                        block.push_back(line);
                     }
                 }
 
-                // Handle the last block if it exists (in case the file doesn't end with a newline)
                 if (!block.empty() && isValidNotificationBlock(block)) {
                     for (const auto& blockLine : block) {
-                        std::cout << blockLine << std::endl;
+                        cout << blockLine << endl;
                     }
                 }
 
-                std::cout << "----------------------\n";
+                cout << "----------------------\n";
 
-                // Update lastPosition to new end of file
-                lastPosition = lastPosition = static_cast<long>(currentSize);
+                lastPosition = static_cast<long>(currentSize);
             }
 
             file.close();
         }
         else {
-            std::cout << "Error opening kitchen_notifications.txt" << std::endl;
+            cout << "Error opening kitchen_notifications.txt" << endl;
         }
 
-        std::this_thread::sleep_for(std::chrono::seconds(2));
+        this_thread::sleep_for(chrono::seconds(2));
     }
 
-    // Cleanup
     if (inputThread.joinable()) {
         inputThread.join();
     }
 }
 
-//Function to check if a block of lines is a valid
-
 bool Restaurant::isValidNotificationBlock(const vector<string>& block) {
     if (block.size() < 4) {
-        return false; //
+        return false;
     }
 
-    const std::string& header = block[0];
+    const string& header = block[0];
     if (header.length() < 8 || header.substr(2, 1) != ":" || header.substr(5, 1) != ":" ||
-        header.find("| Action: ") == std::string::npos ||
-        header.find("| Table: ") == std::string::npos ||
-        header.find("| Status: ") == std::string::npos) {
-        return false; // Header doesn't match the expected format
+        header.find("| Action: ") == string::npos ||
+        header.find("| Table: ") == string::npos ||
+        header.find("| Status: ") == string::npos) {
+        return false;
     }
 
-    // Check the second line ("  Items:")
     if (block[1] != "  Items:") {
         return false;
     }
@@ -939,44 +858,41 @@ bool Restaurant::isValidNotificationBlock(const vector<string>& block) {
     bool hasItem = false;
     size_t i = 2;
     for (; i < block.size(); ++i) {
-        const std::string& line = block[i];
+        const string& line = block[i];
         if (line.find("    - ") == 0) {
             hasItem = true;
-            // Validate item format: "    - NAME xQUANTITY"
             size_t xPos = line.find(" x");
-            if (xPos == std::string::npos || xPos + 2 >= line.length()) {
+            if (xPos == string::npos || xPos + 2 >= line.length()) {
                 return false;
             }
-            std::string quantityStr = line.substr(xPos + 2);
+            string quantityStr = line.substr(xPos + 2);
             try {
-                std::stoi(quantityStr); // Ensure quantity is a number
+                stoi(quantityStr);
             }
             catch (...) {
-                return false; // Quantity is not a valid number
+                return false;
             }
         }
         else {
-            break; // No more item lines
+            break;
         }
     }
 
     if (!hasItem) {
-        return false; // No items found
+        return false;
     }
 
-    // Check the last line ("  Total: $...")
-    const std::string& totalLine = block[i];
+    const string& totalLine = block[i];
     if (totalLine.find("  Total: $") != 0) {
         return false;
     }
 
-    // Validate the total amount
-    std::string totalStr = totalLine.substr(10); // After "  Total: $"
+    string totalStr = totalLine.substr(10);
     try {
-        std::stod(totalStr); // Ensure total is a valid number
+        stod(totalStr);
     }
     catch (...) {
-        return false; // Total is not a valid number
+        return false;
     }
 
     return true;

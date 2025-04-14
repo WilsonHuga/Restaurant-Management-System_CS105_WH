@@ -55,8 +55,5 @@
     <ClInclude Include="File_Z.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Example_Class_Structure.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

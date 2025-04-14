@@ -138,7 +138,6 @@
     <Text Include="kitchen_notifications.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Example_Class_Structure.h" />
     <ClInclude Include="File_Z.h" />
     <ClInclude Include="MenuFunctions.h" />
     <ClInclude Include="MenuItem.h" />

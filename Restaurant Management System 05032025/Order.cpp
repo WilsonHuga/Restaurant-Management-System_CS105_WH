@@ -6,7 +6,6 @@
 #include <map>
 #include <iomanip>
 
-
 using namespace std;
 
 OrderItem::OrderItem(MenuItem menuItem, int qty) {
@@ -14,7 +13,7 @@ OrderItem::OrderItem(MenuItem menuItem, int qty) {
     quantity = qty;
 }
 
-void OrderItem::displayOrderItem() const { // Added const
+void OrderItem::displayOrderItem() const {
     cout << item.name << " x" << quantity << " - $" << item.price * quantity << endl;
 }
 
@@ -24,14 +23,12 @@ Order::Order(int tableNum) {
     total = 0.0;
 }
 
-
 void Order::addItemToOrder(const OrderItem& orderItem) {
     items.push_back(orderItem);
     total += orderItem.item.price * orderItem.quantity;
-    //saveOrderToFile();
 }
 
-void Order::displayOrder() const { // Added const
+void Order::displayOrder() const {
     cout << "Order for Table " << tableNumber << " (" << status << "):" << endl;
     for (const auto& item : items) {
         item.displayOrderItem();
@@ -39,54 +36,47 @@ void Order::displayOrder() const { // Added const
     cout << "Total: $" << total << endl;
 }
 
-//020452025
 void Order::updateOrderStatusInFile() {
-    // Read the entire file
-    std::ifstream inFile("kitchen_notifications.txt");// was order tx 
+    ifstream inFile("kitchen_notifications.txt");
     if (!inFile) {
-        std::cout << "Error: Unable to open order file for reading.\n";
+        cout << "Error: Unable to open order file for reading.\n";
         return;
     }
 
-    std::vector<std::string> fileLines;
-    std::string line;
+    vector<string> fileLines;
+    string line;
     while (getline(inFile, line)) {
         fileLines.push_back(line);
     }
     inFile.close();
 
-    // Find and update the specific order status
-    // We need to find the most recent order for this table
     bool statusUpdated = false;
     for (int i = fileLines.size() - 1; i >= 0; i--) {
-        std::string tableStr = "Order for Table " + std::to_string(tableNumber) + " (";
-        if (fileLines[i].find(tableStr) != std::string::npos) {
-            // We found an order for this table, update its status
+        string tableStr = "Order for Table " + to_string(tableNumber) + " (";
+        if (fileLines[i].find(tableStr) != string::npos) {
             size_t statusStart = fileLines[i].find("(") + 1;
             size_t statusEnd = fileLines[i].find(")");
             fileLines[i].replace(statusStart, statusEnd - statusStart, status);
             statusUpdated = true;
-            break; // We only update the most recent order for this table
+            break;
         }
     }
 
-    // Write the updated content back to the file
-    std::ofstream outFile("kitchen_notifications.txt");//was order txt 
+    ofstream outFile("kitchen_notifications.txt");
     if (!outFile) {
-        std::cout << "Error: Unable to open order file for writing.\n";
+        cout << "Error: Unable to open order file for writing.\n";
         return;
     }
 
     for (const auto& fileLine : fileLines) {
-        outFile << fileLine << std::endl;
+        outFile << fileLine << endl;
     }
     outFile.close();
 
     if (statusUpdated) {
-        std::cout << "Order status updated in file.\n";
+        cout << "Order status updated in file.\n";
     }
     else {
-        // If we didn't find the order, add a new one
         saveOrderToFile();
     }
 }
@@ -98,7 +88,6 @@ void Order::markAsCompleted() {
     }
     status = "Completed";
     cout << "Order for Table " << tableNumber << " is now completed." << endl;
-    //saveOrderToFile();
     updateOrderStatusInFile();
 }
 
@@ -121,56 +110,51 @@ void Order::payOrder() {
 }
 
 void Order::saveOrderToFile() {
-    // First read all existing orders from the file
-    std::vector<std::string> fileContents;
-	std::ifstream inFile("kitchen_notifications.txt");//was order txt
+    vector<string> fileContents;
+    ifstream inFile("kitchen_notifications.txt");
     if (inFile.is_open()) {
-        std::string line;
+        string line;
         while (getline(inFile, line)) {
             fileContents.push_back(line);
         }
         inFile.close();
     }
 
-    // Create the new order content
-    std::stringstream orderContent;
-    orderContent << "Order for Table " << tableNumber << " (" << status << "):" << std::endl;
+    stringstream orderContent;
+    orderContent << "Order for Table " << tableNumber << " (" << status << "):" << endl;
     for (const auto& item : items) {
         orderContent << item.item.name << " x" << item.quantity << " - $"
-            << (item.item.price * item.quantity) << std::endl;
+            << (item.item.price * item.quantity) << endl;
     }
-    orderContent << "Total: $" << total << std::endl << std::endl;
+    orderContent << "Total: $" << total << endl << endl;
 
-    // Open file for writing (append mode)
-	std::ofstream outFile("kitchen_notifications.txt", std::ios::app);// was order txt
+    ofstream outFile("kitchen_notifications.txt", ios::app);
     if (!outFile.is_open()) {
-        std::cout << "Error: Unable to open order file for writing.\n";
+        cout << "Error: Unable to open order file for writing.\n";
         return;
     }
 
-    // If the file was empty, just write the new order
     if (fileContents.empty()) {
         outFile << orderContent.str();
     }
     else {
-        // Otherwise append the new order
         outFile << orderContent.str();
     }
 
     outFile.close();
-    std::cout << "Order details saved to order_details.txt.\n";
+    cout << "Order details saved to kitchen_notifications.txt.\n";
 }
 
-double Order::calculateTotal() const { // Added const
+double Order::calculateTotal() const {
     return total;
 }
 
-int Order::getTableNumber() const { // Added const
+int Order::getTableNumber() const {
     return tableNumber;
 }
 
-void Order::loadOrdersFromFile(std::vector<Order>& orders) {
-	ifstream inFile("kitchen_notifications.txt");// was order txt
+void Order::loadOrdersFromFile(vector<Order>& orders) {
+    ifstream inFile("kitchen_notifications.txt");
     if (!inFile) {
         cout << "Error: Unable to open file for reading.\n";
         return;
@@ -219,9 +203,7 @@ void Order::loadOrdersFromFile(std::vector<Order>& orders) {
     cout << "Orders loaded successfully.\n";
 }
 
-bool Order::getActiveOrderForTable(int tableNum, const std::vector<Order>& orders, Order& result) {
-    // Iterate through orders in reverse (assuming newer orders are added to the end)
-    // This will find the most recent order for the table first
+bool Order::getActiveOrderForTable(int tableNum, const vector<Order>& orders, Order& result) {
     for (auto it = orders.rbegin(); it != orders.rend(); ++it) {
         if (it->tableNumber == tableNum &&
             it->status != "Completed" &&
