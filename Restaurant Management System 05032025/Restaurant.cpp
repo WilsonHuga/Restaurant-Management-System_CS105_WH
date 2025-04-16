@@ -668,6 +668,51 @@ void Restaurant::displaySalesAnalytics() {
     cout << "========================================\n";
 }
 
+MenuItem Restaurant::getMostOrderedItem() {
+    map<string, int> itemQuantities;
+
+    for (const auto& order : orders) {
+        if (order.status != "Paid") { // Exclude orders with "Paid" status
+            for (const auto& orderItem : order.items) {
+                itemQuantities[orderItem.item.name] += orderItem.quantity;
+            }
+        }
+    }
+
+    // Find the item with the highest quantity
+    string mostOrderedItemName = "";
+    int highestCount = 0;
+
+    for (const auto& entry : itemQuantities) {
+        if (entry.second > highestCount) {
+            mostOrderedItemName = entry.first;
+            highestCount = entry.second;
+        }
+    }
+
+    // If no items were found, return a default MenuItem
+    if (mostOrderedItemName.empty()) {
+        return MenuItem("No orders", 0.0);
+    }
+
+    // Find the price of the most ordered item
+    double price = 0.0;
+    for (const auto& order : orders) {
+        if (order.status != "Paid") { // Ensure price is from a non-"Paid" order
+            for (const auto& orderItem : order.items) {
+                if (orderItem.item.name == mostOrderedItemName) {
+                    price = orderItem.item.price;
+                    break;
+                }
+            }
+            if (price > 0.0) break;
+        }
+    }
+
+    return MenuItem(mostOrderedItemName, price);
+
+}
+
 void Restaurant::generateSalesReport() {
     cout << "\n========================================\n";
     cout << "           SALES REPORT\n";
@@ -675,6 +720,27 @@ void Restaurant::generateSalesReport() {
 
     double totalRevenue = calculateTotalRevenue();
     cout << "TOTAL REVENUE: $" << fixed << setprecision(2) << totalRevenue << "\n\n";
+
+    MenuItem mostOrdered = getMostOrderedItem();
+    cout << "MOST ORDERED ITEM OF THE DAY:\n";
+    cout << string(40, '-') << endl;
+    if (mostOrdered.getName() != "No orders") {
+        cout << mostOrdered.getName() << " - $" << fixed << setprecision(2) << mostOrdered.getPrice() << endl;
+
+        // Count how many times this item was ordered
+        int orderCount = 0;
+        for (const auto& order : orders) {
+            for (const auto& item : order.items) {
+                if (item.item.name == mostOrdered.getName()) {
+                    orderCount += item.quantity;
+                }
+            }
+        }
+        cout << "Total ordered: " << orderCount << " times\n\n";
+    }
+    else {
+        cout << "No items have been ordered yet.\n\n";
+    }
 
     cout << "BREAKDOWN BY STATUS:\n";
     cout << string(40, '-') << endl;
@@ -714,6 +780,25 @@ void Restaurant::generateSalesReport() {
     for (const auto& item : sortedItems) {
         cout << left << setw(25) << item.first
             << "$" << fixed << setprecision(2) << item.second << endl;
+    }
+    cout << endl;
+
+    
+    cout << "TABLE OCCUPANCY:\n";
+    cout << string(40, '-') << endl;
+    cout << left << setw(10) << "Table" << setw(15) << "Status" << "Order Total\n";
+    cout << string(40, '-') << endl;
+    for (int i = 0; i < tableCount; i++) {
+        int tableNum = i + 1;
+        string status = availableTables[i] ? "Available" : "Occupied";
+        cout << left << setw(10) << tableNum << setw(15) << status;
+        if (!availableTables[i]) {
+            Order activeOrder(0);
+            if (getActiveOrderForTable(tableNum, activeOrder)) {
+                cout << "$" << fixed << setprecision(2) << activeOrder.calculateTotal();
+            }
+        }
+        cout << endl;
     }
     cout << endl;
 

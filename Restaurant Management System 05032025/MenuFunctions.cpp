@@ -17,6 +17,7 @@ void managerMenu(Restaurant& restaurant) {
         cout << "7. Return to Main Menu\n";
         cout << "Enter your choice: ";
         cin >> choice;
+        
 
         switch (choice) {
         case 1:
@@ -358,4 +359,4 @@ void customerMenu(Restaurant& restaurant) {
             cout << "Invalid choice. Please try again.\n";
         }
     }
-}
+}   

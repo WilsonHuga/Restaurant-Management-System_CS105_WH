@@ -1,0 +1,11 @@
+Order for Table 2 (Pending):
+Steak x5 - $100
+Piadina Ricotta x7 - $105
+Total: $205
+
+10:34:11 | Action: NEW ORDER | Table: 2 | Status: Pending
+  Items:
+    - Steak x5
+    - Piadina Ricotta x7
+  Total: $205.00
+
