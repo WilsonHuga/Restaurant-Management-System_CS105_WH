@@ -1,5 +1,5 @@
-#ifndef File_Z
-#define File_Z
+#ifndef Livenotification
+#define Livenotification
 
 #include <iostream>
 #include <fstream>
@@ -16,7 +16,7 @@
 
 using namespace std;
 
-namespace TwoCli {
+namespace liveNotification {
 
     // Base class for records
     class stbase {
@@ -299,6 +299,6 @@ namespace TwoCli {
         }
     };
 
-} // namespace TwoCli
+} 
 
-#endif // File_Z
+#endif 

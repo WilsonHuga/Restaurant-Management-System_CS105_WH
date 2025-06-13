@@ -1,5 +1,5 @@
 #include "MenuFunctions.h"
-#include "File_Z.h"
+#include "Livenotification.h"
 #include "Example_Class_Structure.h"
 #include <iostream>
 using namespace std;
@@ -150,17 +150,17 @@ void kitchenAttendantMenu(Restaurant& restaurant) {
             cout << "Returning to main menu.\n";
             return;
         case 6: {
-            TwoCli::FileManager<TwoCli::Message> messageManager("kitchen_notifications.txt");
+            liveNotification::FileManager<liveNotification::Message> messageManager("kitchen_notifications.txt");
 
             // Lambda to display messages
-            auto displayFunc = [](const vector<TwoCli::Message>& messages) {
+            auto displayFunc = [](const vector<liveNotification::Message>& messages) {
                 for (const auto& msg : messages) {
                     cout << msg.rawText; // Display the entire notification block
                 }
                 };
 
             // Lambda to check for changes (by comparing size)
-            auto hasChangesFunc = [](const vector<TwoCli::Message>& current, const vector<TwoCli::Message>& last) {
+            auto hasChangesFunc = [](const vector<liveNotification::Message>& current, const vector<liveNotification::Message>& last) {
                 return current.size() != last.size();
                 };
 

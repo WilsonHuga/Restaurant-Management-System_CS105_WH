@@ -52,7 +52,7 @@
     <ClInclude Include="MenuFunctions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="File_Z.h">
+    <ClInclude Include="Livenotification.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

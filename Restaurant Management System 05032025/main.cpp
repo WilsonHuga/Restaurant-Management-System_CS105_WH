@@ -28,9 +28,7 @@ int main() {
     }
     restaurant.loadSavedOrders();
 
-    //07042025
-    /*ofstream clearFile("kitchen_notifications.txt", ios::trunc);
-    clearFile.close();*/
+    
 
     while (true) {
         cout << "\n===================================\n";

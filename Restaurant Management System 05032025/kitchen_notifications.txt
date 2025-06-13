@@ -1,4 +1,4 @@
-Order for Table 2 (Pending):
+Order for Table 2 (Completed):
 Steak x5 - $100
 Piadina Ricotta x7 - $105
 Total: $205
@@ -9,3 +9,21 @@ Total: $205
     - Piadina Ricotta x7
   Total: $205.00
 
+Order for Table 20 (Completed):
+Carbonara x3 - $90
+Salmon x3 - $54
+Total: $144
+
+14:40:48 | Action: NEW ORDER | Table: 20 | Status: Pending
+  Items:
+    - Carbonara x3
+    - Salmon x3
+  Total: $144.00
+Order for Table 20 (Completed):
+Salmon x6 - $108
+Total: $108
+
+14:36:56 | Action: NEW ORDER | Table: 20 | Status: Pending
+  Items:
+    - Salmon x6
+  Total: $108.00
